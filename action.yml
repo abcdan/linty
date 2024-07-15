@@ -1,0 +1,29 @@
+name: Linty
+description: "A dead simple linter where you write your tests in good ol' Javascript"
+inputs:
+  go-version:
+    description: 'The Go version to use'
+    required: true
+    default: '1.20'
+  node-version:
+    description: 'The Node.js version to use'
+    required: true
+    default: '18'
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ inputs.go-version }}
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Run Linty
+      run: go run linty.go
