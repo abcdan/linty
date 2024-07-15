@@ -13,10 +13,10 @@ import (
 
 type LintyConfig struct {
 	Workers int `json:"workers"`
-	Php     []struct {
+	Lint    []struct {
 		Type  string `json:"type"`
 		Regex string `json:"regex"`
-	} `json:"php"`
+	} `json:"lint"`
 }
 
 type LintResult struct {
@@ -27,7 +27,7 @@ type LintResult struct {
 func main() {
 	config := readConfig("linty/linty.json")
 
-	files := getGoFiles(".")
+	files := getFiles(".")
 	results := runLintChecks(files, config.Workers, config)
 
 	for _, result := range results {
@@ -56,19 +56,19 @@ func readConfig(path string) LintyConfig {
 	return config
 }
 
-func getGoFiles(root string) []string {
+func getFiles(root string) []string {
 	var files []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && filepath.Ext(path) == ".go" {
+		if !info.IsDir() {
 			files = append(files, path)
 		}
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("Failed to get Go files: %v\n", err)
+		fmt.Printf("Failed to get files: %v\n", err)
 		os.Exit(1)
 	}
 	return files
@@ -107,28 +107,21 @@ func runLintChecks(files []string, workers int, config LintyConfig) []LintResult
 }
 
 func runLintCheck(file string, config LintyConfig) LintResult {
-	for _, phpConfig := range config.Php {
-		match, _ := regexp.MatchString(phpConfig.Regex, file)
+	for _, lintConfig := range config.Lint {
+		match, _ := regexp.MatchString(lintConfig.Regex, file)
 		if match {
-			cmd := exec.Command("node", fmt.Sprintf("linty/%s.js", phpConfig.Type), file)
+			cmd := exec.Command("node", fmt.Sprintf("linty/%s.js", lintConfig.Type), file)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("Failed to run lint check on %s: %v\n", file, err)
 				return LintResult{File: file, Result: false}
 			}
 
-			result := string(output) == "true"
+			result := string(output) == "true\n"
 			return LintResult{File: file, Result: result}
 		}
 	}
 
-	cmd := exec.Command("node", "linty/generic.js", file)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Failed to run lint check on %s: %v\n", file, err)
-		return LintResult{File: file, Result: false}
-	}
-
-	result := string(output) == "true"
-	return LintResult{File: file, Result: result}
+	// If no specific linting script matches, return true by default
+	return LintResult{File: file, Result: true}
 }
