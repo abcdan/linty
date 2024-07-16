@@ -1,4 +1,4 @@
-name: Linty
+name: Linty.run
 description: "A dead simple linter where you write your tests in good ol' Javascript"
 inputs:
   go-version:
