@@ -8,12 +8,24 @@ console.log(`File to lint: ${fileToLint}`);
 
 try {
   const linterConfig = require(path.join(__dirname, linterFile));
+
   const fileContent = fs.readFileSync(fileToLint, "utf-8");
 
   function runLint(input) {
     const results = [];
     linterConfig.forEach((linter) => {
-      results.push(...linter.lint(input));
+      try {
+        results.push(...linter.lint(input));
+      } catch (error) {
+        console.error(
+          `Error running linter '${linter.name}': ${error.message}`,
+        );
+        results.push({
+          file: input.file,
+          result: false,
+          error: `Linter '${linter.name}' failed: ${error.message}`,
+        });
+      }
     });
     return results;
   }

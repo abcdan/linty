@@ -26,9 +26,9 @@ type LintyConfig struct {
 }
 
 type LintResult struct {
-	File   string
-	Result bool
-	Error  string
+	File   string `json:"file"`
+	Result bool   `json:"result"`
+	Error  string `json:"error"`
 }
 
 func main() {
@@ -163,15 +163,17 @@ func runLintCheck(file string, lintConfig struct {
 	Linter string `json:"linter"`
 }, jsPath string, config LintyConfig) LintResult {
 	logVerbose(config, "Running lint check on file: %s with linter: %s", file, lintConfig.Linter)
-	cmd := exec.Command("node", filepath.Join(jsPath, "lint.js"), lintConfig.Linter, file)
+	cmd := exec.Command("node", filepath.Join(jsPath, "linty.js"), lintConfig.Linter, file)
 	logVerbose(config, "Executing command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		logVerbose(config, "Command output: %s", string(output))
 		return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
 	}
 
 	var lintResults []LintResult
 	if err := json.Unmarshal(output, &lintResults); err != nil {
+		logVerbose(config, "Command output: %s", string(output))
 		return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to parse lint results: %v", err)}
 	}
 
