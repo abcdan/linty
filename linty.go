@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 
 	ignore "github.com/sabhiram/go-gitignore"
 )
@@ -46,7 +45,7 @@ func main() {
 	}
 
 	files := getFiles(".", config, gitIgnore)
-	results := runLintChecks(files, config.Workers, config, jsPath)
+	results := runLintChecks(files, config, jsPath)
 
 	for _, result := range results {
 		if !result.Result {
@@ -142,32 +141,11 @@ func shouldSkipFile(path string, info os.FileInfo, config LintyConfig, gitIgnore
 	return false
 }
 
-func runLintChecks(files []string, workers int, config LintyConfig, jsPath string) []LintResult {
-	var wg sync.WaitGroup
-	fileChan := make(chan string, len(files))
-	resultChan := make(chan LintResult, len(files))
-
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for file := range fileChan {
-				result := runLintCheck(file, config, jsPath)
-				resultChan <- result
-			}
-		}()
-	}
+func runLintChecks(files []string, config LintyConfig, jsPath string) []LintResult {
+	var results []LintResult
 
 	for _, file := range files {
-		fileChan <- file
-	}
-	close(fileChan)
-
-	wg.Wait()
-	close(resultChan)
-
-	var results []LintResult
-	for result := range resultChan {
+		result := runLintCheck(file, config, jsPath)
 		results = append(results, result)
 	}
 
@@ -188,12 +166,16 @@ func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
 			}
 
-			outputStr := strings.TrimSpace(string(output))
-			if outputStr != "true" {
-				return LintResult{File: file, Result: false, Error: outputStr}
+			var lintResults []LintResult
+			if err := json.Unmarshal(output, &lintResults); err != nil {
+				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to parse lint results: %v", err)}
 			}
 
-			return LintResult{File: file, Result: true}
+			for _, result := range lintResults {
+				if !result.Result {
+					return result
+				}
+			}
 		}
 	}
 
