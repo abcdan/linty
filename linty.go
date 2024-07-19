@@ -70,7 +70,7 @@ func main() {
 	}
 
 	files := getFiles(".", config, gitIgnore)
-	results := runLintChecks(files, config, jsPath)
+	results := runLintChecks(files, config)
 
 	for _, result := range results {
 		if !result.Result {
@@ -166,13 +166,13 @@ func shouldSkipFile(path string, info os.FileInfo, config LintyConfig, gitIgnore
 	return false
 }
 
-func runLintChecks(files []string, config LintyConfig, jsPath string) []LintResult {
+func runLintChecks(files []string, config LintyConfig) []LintResult {
 	var results []LintResult
 
 	for _, file := range files {
 		for _, lintConfig := range config.Lint {
 			if match, _ := regexp.MatchString(lintConfig.Regex, file); match {
-				result := runLintCheck(file, lintConfig, jsPath, config)
+				result := runLintCheck(file, lintConfig, config)
 				results = append(results, result)
 			}
 		}
@@ -185,7 +185,7 @@ func runLintCheck(file string, lintConfig struct {
 	Type   string `json:"type"`
 	Regex  string `json:"regex"`
 	Linter string `json:"linter"`
-}, jsPath string, config LintyConfig) LintResult {
+}, config LintyConfig) LintResult {
 	logVerbose(config, "Running lint check on file: %s with linter: %s", file, lintConfig.Linter)
 	cmd := exec.Command("node", "linty.js", lintConfig.Linter, file)
 	logVerbose(config, "Executing command: %s", cmd.String())
