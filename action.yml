@@ -1,10 +1,10 @@
 name: Linty
-description: A custom linting GitHub Action for multiple languages
+description: A dead simple linter where you write your tests in good ol' Javascript
 inputs:
   go-version:
     description: "The Go version to use"
     required: true
-    default: "1.20"
+    default: "1.21.4"
   node-version:
     description: "The Node.js version to use"
     required: true
@@ -27,6 +27,11 @@ runs:
     - name: Download linty.js from abcdan/linty
       run: |
         curl -o linty.js https://raw.githubusercontent.com/abcdan/linty/main/linty.js
+      shell: bash
+
+    - name: Download LINTYCHECK from abcdan/linty
+      run: |
+        curl -o LINTYCHECK https://raw.githubusercontent.com/abcdan/linty/main/LINTYCHECK
       shell: bash
 
     - name: Download go.mod from abcdan/linty

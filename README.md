@@ -125,6 +125,9 @@ The cool part is, you can easily fork this and make it use another language for 
 ## Why is there Go code in the repository? 🦫
 I use Go for reading through all the files and calling the Node scripts. It's just a simple way to do it. I could have used Node for everything, but I felt that Go would be faster for reading through all the files. Not sure if it is, but it gets the job done.
 
+## What is LINTYCHECK? 📝
+We check if the `linty.go` and `linty.js` files are matching the MD5 from the `LINTYCHECK` file. You can always disable it by setting `secure` to `false` in the `linty.json` file. If it does not match, linty will not run. LINTYCHECK can only be updated by `abcdan`. If it's last update is by someone else, linty will not run.
+
 ## Contributing 🙏
 Feel free to open a PR or an issue if you have any suggestions or improvements. I'm always open to feedback. When it's a simple task, I prefer you open a PR with the changes. If it's a bigger change, it's better to open an issue first so we can discuss it.
 
