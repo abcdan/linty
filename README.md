@@ -122,6 +122,9 @@ I really wanted something I can easily add to my own project without having to l
 
 The cool part is, you can easily fork this and make it use another language for parsing the files. Like go, python, php, etc. You can also add more linters for different file types. It's all up to you.
 
+## Why is there Go code in the repository? 🦫
+I use Go for reading through all the files and calling the Node scripts. It's just a simple way to do it. I could have used Node for everything, but I felt that Go would be faster for reading through all the files. Not sure if it is, but it gets the job done.
+
 ## Contributing 🙏
 Feel free to open a PR or an issue if you have any suggestions or improvements. I'm always open to feedback. When it's a simple task, I prefer you open a PR with the changes. If it's a bigger change, it's better to open an issue first so we can discuss it.
 
