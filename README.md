@@ -1,7 +1,7 @@
-# linty
+# linty 🧹
 A dead simple linter where you write your tests in good ol' Javascript
 
-## Usage
+## Usage 🚀
 1. Simply create a `.github/workflows/linty.yml` file in your repository with the following content:
 ```yaml
 name: Linty
@@ -33,7 +33,7 @@ jobs:
 {
   "abcdan": "linty",
   "gitignore": true,
-  "verbose": false,
+  "verbose": true,
   "ignore": [
     "node_modules/",
     "vendor/",
@@ -42,11 +42,94 @@ jobs:
     "linty.go"
   ],
   "lint": [
-    { "type": "go", "regex": ".*\\.go$" },
-    { "type": "py", "regex": ".*\\.py$" },
-    { "type": "php", "regex": ".*\\.php$" }
+    {
+      "type": "go",
+      "regex": ".*\\.go$",
+      "linter": "go.js"
+    },
+    {
+      "type": "py",
+      "regex": ".*\\.py$",
+      "linter": "py.js"
+    },
+    {
+      "type": "php",
+      "regex": ".*\\.php$",
+      "linter": "php.js"
+    }
   ],
   "website": "https://linty.run"
 }
+
 ```
-This file is the configuration for linty. You can make it ignore all the `.gitignore` files and even add your own custom ignore patterns. You can also define the linting rules for different file types.
+This file is the configuration for linty. You can make it ignore all the `.gitignore` files and even add your own custom ignore patterns. You can also define the linting rules for different file types
+
+Now you can add the linters for the different file types in the same directory, here's an example for Javascript:
+`js.js`
+```javascript
+module.exports = [
+  {
+    name: "Unused Variable",
+    description: "Checks for unused variables in JavaScript files.",
+    lint: function (input) {
+      const results = [];
+      const lines = input.content.split("\n");
+      const unusedVariableRegex = /var\s+\w+\s*=/;
+
+      lines.forEach((line, index) => {
+        if (unusedVariableRegex.test(line)) {
+          results.push({
+            file: input.file,
+            line: index + 1,
+            issue: "Unused variable",
+            result: false,
+          });
+        }
+      });
+
+      return results;
+    },
+  },
+  {
+    name: "Console Log",
+    description: "Checks for console.log statements in JavaScript files.",
+    lint: function (input) {
+      const results = [];
+      const lines = input.content.split("\n");
+      const consoleLogRegex = /console\.log\(/;
+
+      lines.forEach((line, index) => {
+        if (consoleLogRegex.test(line)) {
+          results.push({
+            file: input.file,
+            line: index + 1,
+            issue: "Console log statement",
+            result: false,
+          });
+        }
+      });
+
+      return results;
+    },
+  },
+];
+```
+4. That's it. Now whenever you push to the main branch or create a pull request, linty will run and check your code for any issues and the pipeline will fail if any issues are found.
+5. Ensure your code is better 🎉
+
+## Why? 🤔
+I really wanted something I can easily add to my own project without having to learn a special linter syntax. I just want to write some Javascript that does the work. It might not be the most efficient way to do it, but it's the way I like it. It makes it easy to add custom linters for different file types and it's easy to understand.
+
+The cool part is, you can easily fork this and make it use another language for parsing the files. Like go, python, php, etc. You can also add more linters for different file types. It's all up to you.
+
+## Contributing 🙏
+Feel free to open a PR or an issue if you have any suggestions or improvements. I'm always open to feedback. When it's a simple task, I prefer you open a PR with the changes. If it's a bigger change, it's better to open an issue first so we can discuss it.
+
+## License 📜
+It's licensed under the MIT license. You can read the full license [here](LICENSE). The TL;DR is:
+- You can do whatever you want with it
+- I'm not liable for anything
+- If you use it, you have to include the license
+
+## Author 🧙‍♂️
+This project is created and maintained by abcdan on GitHub.

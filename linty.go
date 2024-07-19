@@ -163,7 +163,7 @@ func runLintCheck(file string, lintConfig struct {
 	Linter string `json:"linter"`
 }, jsPath string, config LintyConfig) LintResult {
 	logVerbose(config, "Running lint check on file: %s with linter: %s", file, lintConfig.Linter)
-	cmd := exec.Command("node", filepath.Join(jsPath, "linty.js"), lintConfig.Linter, file)
+	cmd := exec.Command("node", filepath.Join(jsPath, "lint.js"), lintConfig.Linter, file)
 	logVerbose(config, "Executing command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -176,7 +176,7 @@ func runLintCheck(file string, lintConfig struct {
 	}
 
 	for _, result := range lintResults {
-		logVerbose(config, "Test: %s, File: %s, Line: %d, Result: %t", lintConfig.Type, result.File, result.Line, result.Result)
+		logVerbose(config, "Test: %s, File: %s, Result: %t", lintConfig.Type, result.File, result.Result)
 		if !result.Result {
 			return result
 		}
