@@ -25,10 +25,16 @@ type LintResult struct {
 }
 
 func main() {
-	config := readConfig("linty/linty.json")
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: linty <path-to-js-files>")
+		os.Exit(1)
+	}
+	jsPath := os.Args[1]
+
+	config := readConfig(filepath.Join(jsPath, "linty.json"))
 
 	files := getFiles(".")
-	results := runLintChecks(files, config.Workers, config)
+	results := runLintChecks(files, config.Workers, config, jsPath)
 
 	for _, result := range results {
 		if !result.Result {
@@ -74,7 +80,7 @@ func getFiles(root string) []string {
 	return files
 }
 
-func runLintChecks(files []string, workers int, config LintyConfig) []LintResult {
+func runLintChecks(files []string, workers int, config LintyConfig, jsPath string) []LintResult {
 	var wg sync.WaitGroup
 	fileChan := make(chan string, len(files))
 	resultChan := make(chan LintResult, len(files))
@@ -84,7 +90,7 @@ func runLintChecks(files []string, workers int, config LintyConfig) []LintResult
 		go func() {
 			defer wg.Done()
 			for file := range fileChan {
-				result := runLintCheck(file, config)
+				result := runLintCheck(file, config, jsPath)
 				resultChan <- result
 			}
 		}()
@@ -106,11 +112,11 @@ func runLintChecks(files []string, workers int, config LintyConfig) []LintResult
 	return results
 }
 
-func runLintCheck(file string, config LintyConfig) LintResult {
+func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 	for _, lintConfig := range config.Lint {
 		match, _ := regexp.MatchString(lintConfig.Regex, file)
 		if match {
-			cmd := exec.Command("node", fmt.Sprintf("linty/%s.js", lintConfig.Type), file)
+			cmd := exec.Command("node", filepath.Join(jsPath, fmt.Sprintf("%s.js", lintConfig.Type)), file)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("Failed to run lint check on %s: %v\n", file, err)
