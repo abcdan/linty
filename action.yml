@@ -2,19 +2,19 @@ name: Linty
 description: A custom linting GitHub Action for multiple languages
 inputs:
   go-version:
-    description: 'The Go version to use'
+    description: "The Go version to use"
     required: true
-    default: '1.20'
+    default: "1.20"
   node-version:
-    description: 'The Node.js version to use'
+    description: "The Node.js version to use"
     required: true
-    default: '18'
+    default: "18"
   config-path:
-    description: 'The path to the configuration and JavaScript files'
+    description: "The path to the configuration and JavaScript files"
     required: true
-    default: '.github/workflows/linty'
+    default: ".github/workflows/linty"
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -22,6 +22,16 @@ runs:
     - name: Download linty.go from abcdan/linty
       run: |
         curl -o linty.go https://raw.githubusercontent.com/abcdan/linty/main/linty.go
+      shell: bash
+
+    - name: Download go.mod from abcdan/linty
+      run: |
+        curl -o go.mod https://raw.githubusercontent.com/abcdan/linty/main/go.mod
+      shell: bash
+
+    - name: Download go.sum from abcdan/linty
+      run: |
+        curl -o go.sum https://raw.githubusercontent.com/abcdan/linty/main/go.sum
       shell: bash
 
     - name: Set up Go
@@ -33,6 +43,10 @@ runs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node-version }}
+
+    - name: Pull Go dependencies
+      run: go mod tidy
+      shell: bash
 
     - name: Run Linty
       run: go run linty.go ${{ inputs.config-path }}
