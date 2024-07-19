@@ -1,11 +1,11 @@
 module.exports = [
   {
     name: "Unused Variable",
-    description: "Checks for unused variables in JavaScript files.",
+    description: "Checks for unused variables in PHP files.",
     lint: function (input) {
       const results = [];
       const lines = input.split("\n");
-      const unusedVariableRegex = /var\s+\w+\s*=/;
+      const unusedVariableRegex = /\$[a-zA-Z_]\w*\s*=/;
 
       lines.forEach((line, index) => {
         if (unusedVariableRegex.test(line)) {
@@ -22,19 +22,19 @@ module.exports = [
     },
   },
   {
-    name: "Console Log",
-    description: "Checks for console.log statements in JavaScript files.",
+    name: "Echo Statement",
+    description: "Checks for echo statements in PHP files.",
     lint: function (input) {
       const results = [];
       const lines = input.split("\n");
-      const consoleLogRegex = /console\.log\(/;
+      const echoStatementRegex = /echo\s+/;
 
       lines.forEach((line, index) => {
-        if (consoleLogRegex.test(line)) {
+        if (echoStatementRegex.test(line)) {
           results.push({
             file: input.file,
             line: index + 1,
-            issue: "Console log statement",
+            issue: "Echo statement",
             result: false,
           });
         }

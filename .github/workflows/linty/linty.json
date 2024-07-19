@@ -1,18 +1,18 @@
 {
-  "workers": 20,
+  "abcdan": "linty",
   "gitignore": true,
   "verbose": true,
   "ignore": [
     "node_modules/",
     "vendor/",
     "*.test.go",
-    "ignored_file.go"
+    "ignored_file.go",
+    "linty.go"
   ],
   "lint": [
-    {"type": "go", "regex": ".*\\.go$"},
-    {"type": "js", "regex": ".*\\.js$"},
-    {"type": "py", "regex": ".*\\.py$"},
-    {"type": "php", "regex": ".*\\.php$"},
-    {"type": "java", "regex": ".*\\.java$"}
-  ]
+    { "type": "go", "regex": ".*\\.go$" },
+    { "type": "py", "regex": ".*\\.py$" },
+    { "type": "php", "regex": ".*\\.php$" }
+  ],
+  "website": "https://linty.run"
 }

@@ -14,7 +14,7 @@ import (
 )
 
 type LintyConfig struct {
-	Workers   int      `json:"workers"`
+	Abcdan    string   `json:"abcdan"`
 	Gitignore bool     `json:"gitignore"`
 	Ignore    []string `json:"ignore"`
 	Verbose   bool     `json:"verbose"`
