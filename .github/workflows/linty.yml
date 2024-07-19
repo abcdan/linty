@@ -1,39 +1,24 @@
 name: Linty
-description: A custom linting GitHub Action for multiple languages
-inputs:
-  go-version:
-    description: 'The Go version to use'
-    required: true
-    default: '1.20'
-  node-version:
-    description: 'The Node.js version to use'
-    required: true
-    default: '18'
-  config-path:
-    description: 'The path to the configuration and JavaScript files'
-    required: true
-    default: '.github/workflows/linty'
-runs:
-  using: 'composite'
-  steps:
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Download linty.go from abcdan/linty
-      run: |
-        curl -o linty.go https://raw.githubusercontent.com/abcdan/linty/main/linty.go
-      shell: bash
-
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ inputs.go-version }}
-
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ inputs.node-version }}
-
     - name: Run Linty
-      run: go run linty.go ${{ inputs.config-path }}
-      shell: bash
+      uses: abcdan/linty@v0.0.2
+      with:
+        go-version: '1.20'
+        node-version: '18'
+        config-path: '.github/workflows/linty'
