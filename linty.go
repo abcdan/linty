@@ -172,6 +172,7 @@ func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 			}
 
 			for _, result := range lintResults {
+				logVerbose(config, "Test: %s, File: %s, Line: %d, Result: %t", lintConfig.Type, result.File, result.Line, result.Result)
 				if !result.Result {
 					return result
 				}
