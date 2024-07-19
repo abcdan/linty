@@ -16,6 +16,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Download linty.go from abcdan/linty
+      run: |
+        curl -o linty.go https://raw.githubusercontent.com/abcdan/linty/main/linty.go
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
@@ -27,4 +31,4 @@ jobs:
         node-version: '18'
 
     - name: Run Linty
-      run: go run linty.go
+      run: go run linty.go .github/workflows/linty
