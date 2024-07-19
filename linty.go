@@ -18,6 +18,7 @@ type LintyConfig struct {
 	Workers   int      `json:"workers"`
 	Gitignore bool     `json:"gitignore"`
 	Ignore    []string `json:"ignore"`
+	Verbose   bool     `json:"verbose"`
 	Lint      []struct {
 		Type  string `json:"type"`
 		Regex string `json:"regex"`
@@ -60,26 +61,28 @@ func main() {
 func readConfig(path string) LintyConfig {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Failed to read config: %v\n", err)
+		logError("Failed to read config: %v", err)
 		os.Exit(1)
 	}
 
 	var config LintyConfig
 	if err := json.Unmarshal(data, &config); err != nil {
-		fmt.Printf("Failed to parse config: %v\n", err)
+		logError("Failed to parse config: %v", err)
 		os.Exit(1)
 	}
 
+	logVerbose(config, "Config loaded: %+v", config)
 	return config
 }
 
 func loadGitignore() *ignore.GitIgnore {
 	data, err := ioutil.ReadFile(".gitignore")
 	if err != nil {
-		fmt.Printf("Failed to read .gitignore: %v\n", err)
+		logError("Failed to read .gitignore: %v", err)
 		return nil
 	}
 
+	logVerbose(LintyConfig{Verbose: true}, ".gitignore loaded")
 	return ignore.CompileIgnoreLines(strings.Split(string(data), "\n")...)
 }
 
@@ -90,46 +93,53 @@ func getFiles(root string, config LintyConfig, gitIgnore *ignore.GitIgnore) []st
 			return err
 		}
 
-		// Skip directories and files based on .gitignore
-		if gitIgnore != nil && gitIgnore.MatchesPath(path) {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-
-		// Skip directories and files based on ignore array
-		for _, pattern := range config.Ignore {
-			if strings.HasSuffix(pattern, "/") {
-				if info.IsDir() && strings.HasPrefix(path, pattern) {
-					return filepath.SkipDir
-				}
-			} else {
-				match, _ := filepath.Match(pattern, filepath.Base(path))
-				if match {
-					return nil
-				}
-			}
-		}
-
-		// Skip files inside the .github folder
-		if strings.Contains(path, ".github") {
-			if info.IsDir() {
-				return filepath.SkipDir
-			}
+		if shouldSkipFile(path, info, config, gitIgnore) {
+			logVerbose(config, "Skipping file: %s", path)
 			return nil
 		}
 
 		if !info.IsDir() {
 			files = append(files, path)
+			logVerbose(config, "Found file: %s", path)
 		}
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("Failed to get files: %v\n", err)
+		logError("Failed to get files: %v", err)
 		os.Exit(1)
 	}
 	return files
+}
+
+func shouldSkipFile(path string, info os.FileInfo, config LintyConfig, gitIgnore *ignore.GitIgnore) bool {
+	if gitIgnore != nil && gitIgnore.MatchesPath(path) {
+		if info.IsDir() {
+			return true
+		}
+		return false
+	}
+
+	for _, pattern := range config.Ignore {
+		if strings.HasSuffix(pattern, "/") {
+			if info.IsDir() && strings.HasPrefix(path, pattern) {
+				return true
+			}
+		} else {
+			match, _ := filepath.Match(pattern, filepath.Base(path))
+			if match {
+				return true
+			}
+		}
+	}
+
+	if strings.Contains(path, ".github") {
+		if info.IsDir() {
+			return true
+		}
+		return false
+	}
+
+	return false
 }
 
 func runLintChecks(files []string, workers int, config LintyConfig, jsPath string) []LintResult {
@@ -165,10 +175,14 @@ func runLintChecks(files []string, workers int, config LintyConfig, jsPath strin
 }
 
 func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
+	logVerbose(config, "Running lint check on file: %s", file)
 	for _, lintConfig := range config.Lint {
+		logVerbose(config, "Checking with regex: %s", lintConfig.Regex)
 		match, _ := regexp.MatchString(lintConfig.Regex, file)
 		if match {
+			logVerbose(config, "Matched regex: %s", lintConfig.Regex)
 			cmd := exec.Command("node", filepath.Join(jsPath, fmt.Sprintf("%s.js", lintConfig.Type)), file)
+			logVerbose(config, "Executing command: %s", cmd.String())
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
@@ -183,6 +197,15 @@ func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 		}
 	}
 
-	// If no specific linting script matches, return true by default
 	return LintResult{File: file, Result: true}
+}
+
+func logError(format string, args ...interface{}) {
+	fmt.Printf("ERROR: "+format+"\n", args...)
+}
+
+func logVerbose(config LintyConfig, format string, args ...interface{}) {
+	if config.Verbose {
+		fmt.Printf("VERBOSE: "+format+"\n", args...)
+	}
 }
