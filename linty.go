@@ -27,6 +27,7 @@ type LintyConfig struct {
 type LintResult struct {
 	File   string
 	Result bool
+	Error  string
 }
 
 func main() {
@@ -48,7 +49,7 @@ func main() {
 
 	for _, result := range results {
 		if !result.Result {
-			fmt.Printf("Lint failed for file: %s\n", result.File)
+			fmt.Printf("Lint failed for file: %s\nError: %s\n", result.File, result.Error)
 			os.Exit(1)
 		}
 	}
@@ -111,6 +112,14 @@ func getFiles(root string, config LintyConfig, gitIgnore *ignore.GitIgnore) []st
 			}
 		}
 
+		// Skip files inside the .github folder
+		if strings.Contains(path, ".github") {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
 		if !info.IsDir() {
 			files = append(files, path)
 		}
@@ -162,12 +171,15 @@ func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 			cmd := exec.Command("node", filepath.Join(jsPath, fmt.Sprintf("%s.js", lintConfig.Type)), file)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
-				fmt.Printf("Failed to run lint check on %s: %v\n", file, err)
-				return LintResult{File: file, Result: false}
+				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
 			}
 
-			result := strings.TrimSpace(string(output)) == "true"
-			return LintResult{File: file, Result: result}
+			outputStr := strings.TrimSpace(string(output))
+			if outputStr != "true" {
+				return LintResult{File: file, Result: false, Error: outputStr}
+			}
+
+			return LintResult{File: file, Result: true}
 		}
 	}
 
