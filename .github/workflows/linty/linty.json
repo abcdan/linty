@@ -1,6 +1,7 @@
 {
   "workers": 20,
   "gitignore": true,
+  "verbose": true,
   "ignore": [
     "node_modules/",
     "vendor/",
