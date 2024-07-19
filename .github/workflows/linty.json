@@ -1,5 +1,5 @@
 {
-  "workers": 20,
+  "workers": 1,
   "lint": [
     {"type": "go", "regex": ".*\\.go$"},
     {"type": "js", "regex": ".*\\.js$"},
