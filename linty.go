@@ -19,8 +19,9 @@ type LintyConfig struct {
 	Ignore    []string `json:"ignore"`
 	Verbose   bool     `json:"verbose"`
 	Lint      []struct {
-		Type  string `json:"type"`
-		Regex string `json:"regex"`
+		Type   string `json:"type"`
+		Regex  string `json:"regex"`
+		Linter string `json:"linter"`
 	} `json:"lint"`
 }
 
@@ -145,38 +146,39 @@ func runLintChecks(files []string, config LintyConfig, jsPath string) []LintResu
 	var results []LintResult
 
 	for _, file := range files {
-		result := runLintCheck(file, config, jsPath)
-		results = append(results, result)
+		for _, lintConfig := range config.Lint {
+			if match, _ := regexp.MatchString(lintConfig.Regex, file); match {
+				result := runLintCheck(file, lintConfig, jsPath, config)
+				results = append(results, result)
+			}
+		}
 	}
 
 	return results
 }
 
-func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
-	logVerbose(config, "Running lint check on file: %s", file)
-	for _, lintConfig := range config.Lint {
-		logVerbose(config, "Checking with regex: %s", lintConfig.Regex)
-		match, _ := regexp.MatchString(lintConfig.Regex, file)
-		if match {
-			logVerbose(config, "Matched regex: %s", lintConfig.Regex)
-			cmd := exec.Command("node", filepath.Join(jsPath, fmt.Sprintf("%s.js", lintConfig.Type)), file)
-			logVerbose(config, "Executing command: %s", cmd.String())
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
-			}
+func runLintCheck(file string, lintConfig struct {
+	Type   string `json:"type"`
+	Regex  string `json:"regex"`
+	Linter string `json:"linter"`
+}, jsPath string, config LintyConfig) LintResult {
+	logVerbose(config, "Running lint check on file: %s with linter: %s", file, lintConfig.Linter)
+	cmd := exec.Command("node", filepath.Join(jsPath, "linty.js"), lintConfig.Linter, file)
+	logVerbose(config, "Executing command: %s", cmd.String())
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to run lint check: %v", err)}
+	}
 
-			var lintResults []LintResult
-			if err := json.Unmarshal(output, &lintResults); err != nil {
-				return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to parse lint results: %v", err)}
-			}
+	var lintResults []LintResult
+	if err := json.Unmarshal(output, &lintResults); err != nil {
+		return LintResult{File: file, Result: false, Error: fmt.Sprintf("Failed to parse lint results: %v", err)}
+	}
 
-			for _, result := range lintResults {
-				logVerbose(config, "Test: %s, File: %s, Line: %d, Result: %t", lintConfig.Type, result.File, result.Line, result.Result)
-				if !result.Result {
-					return result
-				}
-			}
+	for _, result := range lintResults {
+		logVerbose(config, "Test: %s, File: %s, Line: %d, Result: %t", lintConfig.Type, result.File, result.Line, result.Result)
+		if !result.Result {
+			return result
 		}
 	}
 

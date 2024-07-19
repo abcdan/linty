@@ -4,7 +4,7 @@ module.exports = [
     description: "Checks for unused imports in Go files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const unusedImportRegex = /import\s+\w+\s+"[^"]+"/;
 
       lines.forEach((line, index) => {
@@ -26,7 +26,7 @@ module.exports = [
     description: "Checks for unused variables in Go files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const unusedVariableRegex = /var\s+\w+\s+/;
 
       lines.forEach((line, index) => {
@@ -48,7 +48,7 @@ module.exports = [
     description: "Checks for missing error handling in Go files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const errorHandlingRegex = /if\s+err\s*!=\s*nil\s*{\s*return\s+err\s*}/;
 
       lines.forEach((line, index) => {

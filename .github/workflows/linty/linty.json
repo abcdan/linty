@@ -10,9 +10,21 @@
     "linty.go"
   ],
   "lint": [
-    { "type": "go", "regex": ".*\\.go$" },
-    { "type": "py", "regex": ".*\\.py$" },
-    { "type": "php", "regex": ".*\\.php$" }
+    {
+      "type": "go",
+      "regex": ".*\\.go$",
+      "linter": "go.js"
+    },
+    {
+      "type": "py",
+      "regex": ".*\\.py$",
+      "linter": "py.js"
+    },
+    {
+      "type": "php",
+      "regex": ".*\\.php$",
+      "linter": "php.js"
+    }
   ],
   "website": "https://linty.run"
 }

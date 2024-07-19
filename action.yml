@@ -24,6 +24,11 @@ runs:
         curl -o linty.go https://raw.githubusercontent.com/abcdan/linty/main/linty.go
       shell: bash
 
+    - name: Download linty.js from abcdan/linty
+      run: |
+        curl -o linty.js https://raw.githubusercontent.com/abcdan/linty/main/linty.js
+      shell: bash
+
     - name: Download go.mod from abcdan/linty
       run: |
         curl -o go.mod https://raw.githubusercontent.com/abcdan/linty/main/go.mod

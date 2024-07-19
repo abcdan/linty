@@ -4,7 +4,7 @@ module.exports = [
     description: "Checks for unused variables in PHP files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const unusedVariableRegex = /\$[a-zA-Z_]\w*\s*=/;
 
       lines.forEach((line, index) => {
@@ -26,7 +26,7 @@ module.exports = [
     description: "Checks for echo statements in PHP files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const echoStatementRegex = /echo\s+/;
 
       lines.forEach((line, index) => {

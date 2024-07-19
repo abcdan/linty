@@ -4,7 +4,7 @@ module.exports = [
     description: "Checks for unused variables in JavaScript files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const unusedVariableRegex = /var\s+\w+\s*=/;
 
       lines.forEach((line, index) => {
@@ -26,7 +26,7 @@ module.exports = [
     description: "Checks for console.log statements in JavaScript files.",
     lint: function (input) {
       const results = [];
-      const lines = input.split("\n");
+      const lines = input.content.split("\n");
       const consoleLogRegex = /console\.log\(/;
 
       lines.forEach((line, index) => {
