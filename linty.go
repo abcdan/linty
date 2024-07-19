@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,12 +9,17 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
+
+	"github.com/sabhiram/go-gitignore"
 )
 
 type LintyConfig struct {
-	Workers int `json:"workers"`
-	Lint    []struct {
+	Workers   int      `json:"workers"`
+	Gitignore bool     `json:"gitignore"`
+	Ignore    []string `json:"ignore"`
+	Lint      []struct {
 		Type  string `json:"type"`
 		Regex string `json:"regex"`
 	} `json:"lint"`
@@ -33,7 +39,12 @@ func main() {
 
 	config := readConfig(filepath.Join(jsPath, "linty.json"))
 
-	files := getFiles(".")
+	var gitIgnore *ignore.GitIgnore
+	if config.Gitignore {
+		gitIgnore = loadGitignore()
+	}
+
+	files := getFiles(".", config, gitIgnore)
 	results := runLintChecks(files, config.Workers, config, jsPath)
 
 	for _, result := range results {
@@ -62,12 +73,45 @@ func readConfig(path string) LintyConfig {
 	return config
 }
 
-func getFiles(root string) []string {
+func loadGitignore() *ignore.GitIgnore {
+	data, err := ioutil.ReadFile(".gitignore")
+	if err != nil {
+		fmt.Printf("Failed to read .gitignore: %v\n", err)
+		return nil
+	}
+
+	return ignore.CompileIgnoreLines(strings.Split(string(data), "\n")...)
+}
+
+func getFiles(root string, config LintyConfig, gitIgnore *ignore.GitIgnore) []string {
 	var files []string
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+
+		// Skip directories and files based on .gitignore
+		if gitIgnore != nil && gitIgnore.MatchesPath(path) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+
+		// Skip directories and files based on ignore array
+		for _, pattern := range config.Ignore {
+			if strings.HasSuffix(pattern, "/") {
+				if info.IsDir() && strings.HasPrefix(path, pattern) {
+					return filepath.SkipDir
+				}
+			} else {
+				match, _ := filepath.Match(pattern, filepath.Base(path))
+				if match {
+					return nil
+				}
+			}
+		}
+
 		if !info.IsDir() {
 			files = append(files, path)
 		}
@@ -123,7 +167,7 @@ func runLintCheck(file string, config LintyConfig, jsPath string) LintResult {
 				return LintResult{File: file, Result: false}
 			}
 
-			result := string(output) == "true\n"
+			result := strings.TrimSpace(string(output)) == "true"
 			return LintResult{File: file, Result: result}
 		}
 	}
