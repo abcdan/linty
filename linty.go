@@ -187,7 +187,7 @@ func runLintCheck(file string, lintConfig struct {
 	Linter string `json:"linter"`
 }, config LintyConfig) LintResult {
 	logVerbose(config, "Running lint check on file: %s with linter: %s", file, lintConfig.Linter)
-	cmd := exec.Command("cd ../ && ", "node", "linty.js", lintConfig.Linter, file)
+	cmd := exec.Command("node", "linty.js", lintConfig.Linter, file)
 	logVerbose(config, "Executing command: %s", cmd.String())
 	output, err := cmd.CombinedOutput()
 	if err != nil {
