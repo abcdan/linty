@@ -11,11 +11,6 @@
   ],
   "lint": [
     {
-      "type": "go",
-      "regex": ".*\\.go$",
-      "linter": "go.js"
-    },
-    {
       "type": "py",
       "regex": ".*\\.py$",
       "linter": "py.js"
