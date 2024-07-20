@@ -3,8 +3,10 @@ const path = require("path");
 
 const [linterFile, fileToLint] = process.argv.slice(2);
 
+const lintyJsPath = path.resolve(__dirname);
+
 const linterConfig = require(
-  path.join(".github", "workflows", "linty", linterFile),
+  path.join(lintyJsPath, ".github", "workflows", "linty", linterFile),
 );
 
 const fileContent = fs.readFileSync(fileToLint, "utf-8");
